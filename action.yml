@@ -1,6 +1,6 @@
 name: "Bump version number"
 author: "action-pack"
-description: "Action to bump a version number using repository variables."
+description: "Action to generate a version number."
 
 branding:
   icon: "plus"
@@ -27,5 +27,5 @@ inputs:
     required: false
 
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: node20
+  main: dist/index.js
