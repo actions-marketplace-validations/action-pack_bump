@@ -15,7 +15,6 @@ function path_() {
   if (repository.includes("/")) return "/repos/" + repository;
 
   return "/repos/" + owner + "/" + repository;
-
 }
 
 function input(name, def) {
@@ -24,29 +23,39 @@ function input(name, def) {
   if (inp === "" || inp.toLowerCase() === "false") return def;
 
   return inp;
-
 }
 
 function increment(string, amount) {
 
+  const value = String(string || "");
+  const step = Number.parseInt(amount, 10);
+
+  if (!Number.isInteger(step) || step.toString() !== String(amount).trim()) {
+    throw new Error(`Invalid amount '${amount}', expected an integer.`);
+  }
+
   // Extract string's number
-  var number = string.match(/\d+/) === null ? 0 : string.match(/\d+/)[0];
+  var number = value.match(/\d+/) === null ? "" : value.match(/\d+/)[0];
+
+  if (number === "") {
+    throw new Error(`Value '${value}' does not contain a number to increment.`);
+  }
 
   // Store number's length
   var numberLength = number.length;
   var leadingZeroes = number.startsWith("0");
 
   // Increment number by the amount
-  number = (parseInt(number, 10) + parseInt(amount, 10)).toString();
+  number = (Number.parseInt(number, 10) + step).toString();
 
   // If there were leading 0s, add them again
-  if (leadingZeroes) {
+  if (leadingZeroes && !number.startsWith("-")) {
     while (number.length < numberLength) {
       number = "0" + number;
     }
   }
 
-  return string.replace(/[0-9]/g, "").concat(number);
+  return value.replace(/[0-9]/g, "").concat(number);
 }
 
 const createVariable = (name, data) => {
@@ -71,7 +80,7 @@ const createVariable = (name, data) => {
 const setVariable = (name, data) => {
 
   let url = "PATCH " + path_();
-  url += "/actions/variables/" + name;
+  url += "/actions/variables/" + encodeURIComponent(name);
 
   return octokit.request(url, {
     name: name,
@@ -82,14 +91,15 @@ const setVariable = (name, data) => {
 const getVariable = (name) => {
 
   let url = "GET " + path_();
-  url += "/actions/variables/" + name;
+  url += "/actions/variables/" + encodeURIComponent(name);
 
   return octokit.request(url);
 };
 
 const bootstrap = async () => {
 
-  let exists = false;
+  let majorExists = false;
+  let minorExists = false;
   let old_minor = "";
   let new_minor = "";
   let old_major = "";
@@ -97,18 +107,22 @@ const bootstrap = async () => {
 
   try {
 
-    const response = await getVariable("MAJOR");
-
-    exists = response.status === 200;
-    if (exists) old_major = response.data.value;
-
-  } catch (e) {
-    // Variable does not exist
-  }
-
-  if (!exists) {
-
     try {
+
+      const response = await getVariable("MAJOR");
+
+      majorExists = response.status === 200;
+      if (majorExists) old_major = response.data.value;
+
+    } catch (e) {
+      if (e.status !== 404) {
+        throw e;
+      }
+
+      // Variable does not exist
+    }
+
+    if (!majorExists) {
 
       old_major = "1";
       const response = await createVariable("MAJOR", old_major);
@@ -116,28 +130,24 @@ const bootstrap = async () => {
       if (response.status !== 201) {
         throw new Error("ERROR: Wrong status was returned: " + response.status);
       }
+    }
+
+    try {
+
+      const response = await getVariable("MINOR");
+
+      minorExists = response.status === 200;
+      if (minorExists) old_minor = response.data.value;
 
     } catch (e) {
-      core.setFailed(path_() + ": " + e.message);
-      console.error(e);
-      return null;
+      if (e.status !== 404) {
+        throw e;
+      }
+
+      // Variable does not exist
     }
-  }
 
-  try {
-
-    const response = await getVariable("MINOR");
-
-    exists = response.status === 200;
-    if (exists) old_minor = response.data.value;
-
-  } catch (e) {
-    // Variable does not exist
-  }
-
-  try {
-
-    if (exists) {
+    if (minorExists) {
 
       if (old_minor === "0" || old_minor === "00") {
         new_minor = "01";
@@ -201,7 +211,4 @@ bootstrap()
       core.setFailed(err.message);
       console.error(err);
     }
-  )
-  .then(() => {
-    process.exit();
-  });
+  );

@@ -3,7 +3,7 @@
   
   [![Build](https://github.com/action-pack/bump/actions/workflows/build.yml/badge.svg)](https://github.com/action-pack/bump/)
   [![Version](https://img.shields.io/github/v/tag/action-pack/bump?label=version&sort=semver&color=066da5)](https://github.com/marketplace/actions/bump-version-number)
-  [![Size](https://img.shields.io/github/size/action-pack/bump/dist/index.js?branch=release/v2.08&label=size&color=066da5)](https://github.com/action-pack/bump/)
+  [![Size](https://img.shields.io/github/size/action-pack/bump/dist/index.js?branch=release/v2.15&label=size&color=066da5)](https://github.com/action-pack/bump/)
   
 </div></h1>
 
@@ -59,4 +59,4 @@ Action to generate a version number using repository variables.
     ```
 
 ## Stars 🌟
-[![Stars](https://starchart.cc/action-pack/bump.svg?variant=adaptive)](https://starchart.cc/action-pack/bump)
+[![Stargazers](https://raw.githubusercontent.com/star-stats/stars/refs/heads/data/charts/action-pack-bump.svg)](https://github.com/action-pack/bump/stargazers)
